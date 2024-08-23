@@ -1,0 +1,5 @@
+/lost+found/
+/jose/Descargas/A-Escanear/
+/.Trash-1000/
+/comun/EstudioSistema/ToshBackup-bin
+/comun/EstudioSistema/ToshDatos-bin

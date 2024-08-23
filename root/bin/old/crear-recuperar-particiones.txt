@@ -1,0 +1,44 @@
+Comando usado para salvar:
+
+1.
+fsarchiver -j2 savefs linuxparts.fsa /dev/sda7 /dev/sda8 /dev/sda10 /dev/sda11
+
+2. Tambien:
+fsarchiver -j2 savefs raiz.fsa /dev/sda7 
+fsarchiver -j2 savefs var.fsa /dev/sda8 
+fsarchiver -j2 savefs tmp.fsa /dev/sda10 
+fsarchiver -j2 savefs home.fsa /dev/sda11
+
+3. NTFS:
+# fsarchiver -j2 -v savefs windows.fsa /dev/sda4 
+fsarchiver -h
+<information>
+ * Support for ntfs filesystems is unstable: don't use it for production.
+
+Asi: ntfsclone y partimage
+ntfsclone -s -o sda1.sistema.img /dev/sda1
+ntfsclone -s -o sda5.windows.img /dev/sda5
+
+
+
+-----------------
+Para recuperar:
+
+1.
+fsarchiver -j2 restfs linuxparts.fsa id=0,dest=/dev/sda7 id=1,dest=/dev/sda8 id=2,dest=/dev/sda10 id=3,dest=/dev/sda11
+
+2.
+fsarchiver -j2 restfs raiz.fsa id=0,dest=/dev/sda7
+fsarchiver -j2 restfs var.fsa id=0,dest=/dev/sda8
+fsarchiver -j2 restfs tmp.fsa id=0,dest=/dev/sda10
+fsarchiver -j2 restfs home.fsa id=0,dest=/dev/sda11
+
+3.
+# fsarchiver restfs /data/windows.fsa id=0,dest=/dev/sda4,label=OS,uuid=552a2d46-0d52-4555-bd5f-b5cd51d7493d
+ntfsclone -r --overwrite /dev/sda1 sda1.sistema.img
+ntfsclone -r --overwrite /dev/sda5 sda5.windows.img
+
+
+
+
+

@@ -1,0 +1,5 @@
+lost+found/
+.cache/
+.local/share/Trash/
+.thunderbird/
+
