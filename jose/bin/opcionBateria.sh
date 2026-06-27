@@ -1,1 +1,0 @@
-alertaBateria.sh

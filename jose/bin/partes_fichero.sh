@@ -1,5 +1,10 @@
 #!/bin/sh
 # probar quitar extension a fichero
+if [ $# -eq 0 ]; then
+	printf "%s\n" "Uso: $(basename $0) FICHERO"
+  exit
+fi
+
 DIRN=$(dirname $1)
 BASE=$(basename $1)
 EXT="${BASE##*.}"

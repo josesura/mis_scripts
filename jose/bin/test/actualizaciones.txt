@@ -1,0 +1,8 @@
+at
+gir1.2
+libatk
+libatk1.0
+libatspi2.0
+libbpf1
+liborc
+xterm

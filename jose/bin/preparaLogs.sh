@@ -13,9 +13,9 @@ else
 	DIR_LOGS=.
 fi
 
-if [ ! -d $DIR_LOGS ]; then
-	echo Creando $DIR_LOGS
-	mkdir -p $DIR_LOGS
+if [ ! -d "$DIR_LOGS" ]; then
+	echo Creando "$DIR_LOGS"
+	mkdir -p "$DIR_LOGS"
 fi
 
 if [ $# -gt 1 ]; then 
@@ -25,6 +25,6 @@ else
 fi
 
 #FECHA=`date +%y%m%d-%H%M`
-FECHA=`date +%y%m%d-%H`
-FICHERO_LOG=$DIR_LOGS/$NOMBRE_LOG-$FECHA
-echo $FICHERO_LOG
+FECHA=$(date +%y%m%d-%H)
+FICHERO_LOG="$DIR_LOGS/$NOMBRE_LOG-$FECHA"
+echo "$FICHERO_LOG"

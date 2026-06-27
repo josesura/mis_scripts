@@ -1,0 +1,104 @@
+#!/bin/dash
+# Revisíon más informada los paquetes a actualizar
+# Lista el total de actualizaciones y permite filtrar aquellos de los que se quiere más info
+# De ellos muestra el Description
+# Por defecto filtra librerias, python, tomcat, bin, gtk
+#
+# Mirar esto: https://piproductora.com/enumere-las-actualizaciones-disponibles-pero-no-las-instale/
+# $(tput bold)$(tput setaf 2)XX$(tput sgr0)
+# man terminfo  terminfo - terminal capability database. Colores: 1 rojo, 2 verde, 3 amarillo, 4 azul, 5 magenta, 6 cyan, 7 blanco
+#
+#clear
+printf "%s\n" "$(tput bold)$(tput setaf 5)Revisando actualizaciones$(tput sgr0)..."
+
+# refrescar bdd
+sudo apt-get update
+# Cargar datos
+COMANDO='apt list --upgradable'
+#NUM_ACTUALIZ=$(( $($COMANDO | wc -l) -1 ))
+#NUM_SECURITY=$(( $($COMANDO | grep security | wc -l) ))
+SALIDA="$($COMANDO)"
+NUM_ACTUALIZ=$(( $(echo "$SALIDA" | wc -l) -1 ))
+NUM_SECURITY=$(( $(echo "$SALIDA" | grep security | wc -l) ))
+
+# control de salida correcta. Otra opcion es comprobar si esta en uso /var/lib/apt/lists/lock
+EXITO=$?
+if [ ! $EXITO -eq 0 ]; then
+	printf "%s\n" "Comando: $COMANDO. Salida: $EXITO"
+	printf "%s %s\n" "$(tput bold)$(tput setaf 1)No es posible refrescar las actualizaciones. " "$(tput bold)$(tput setaf 6)Esperar unos momentos$(tput sgr0)"
+	return
+fi
+
+if [ "$NUM_ACTUALIZ" -eq "0" ] # Nada que hacer, salimos
+then
+    printf "%s\n" "$(tput bold)$(tput setaf 6)No hay actualizaciones disponibles$(tput sgr0)"
+    printf "\n%s\n\n" "Recordar $(tput setaf 6)actualizaciones.sh$(tput sgr0)"
+    return
+fi
+
+printf "%s\n" "Hay $(tput bold)$(tput setaf 6)$NUM_ACTUALIZ$(tput sgr0) actualizaciones, $(tput bold)$(tput setaf 6)$NUM_SECURITY$(tput sgr0) de SECURITY"
+read -rp "¿Quieres verlas? ($(tput bold)$(tput setaf 6)N$(tput sgr0)o/otra letra): " SEGUIR
+#read -rp "Hay $(tput bold)$(tput setaf 6)$NUM_ACTUALIZ actualizaciones$(tput sgr0), $NUM_SECURITY de SECURITY. ¿Quieres verlas? ($(tput bold)$(tput setaf 6)N$(tput sgr0)o/otra letra): " SEGUIR
+
+if [ "$SEGUIR" = n ] || [ "$SEGUIR" = N ]
+then
+    #printf "%s\n" "Recordar $(tput setaf 6)actualizaciones.sh$(tput sgr0)"
+    return
+fi
+
+#printf "%s\n" "Lista de actualizaciones:"
+PRE_FILTRO="Listando"
+ACTUALIZACION=$($COMANDO | grep -v $PRE_FILTRO 2>/dev/null)
+printf "%s\n%s\n" "$(tput bold)$(tput setaf 6)ACTUALIZACION$(tput sgr0):" "$ACTUALIZACION"
+
+FILTRO="^7zip|^anacron|^apache|^apt|^atril|^audacity|\
+^bash|^bcompare|bin$|^binutils|^bluefish|bluetooth|bluez|^bootlogd|^bsd|\
+^caja|^calibre|^chkrootkit|^clamav|^cpp|^chromium|^coreutils|^cron|^cups|\
+^dash|^dbus|^debconf|^debian|^dia|^dictionaries| diffutils|^dirmngr|^dpkg|e2fsprogs|^eject|^evolution|^exim|\
+^fdisk|^ffmpeg|^firefox|^firmware|^flatpak|^fonts|^fsarchiver|^fwupd|\
+^g++|^gcc|^geany|^ghostscript|^gimp|^gir1|^git|^gnome|^gnupg|^gpg|^gstreamer|^gtk|^gzip|\
+^imagemagick|^initscripts|^intel|^kbd|^keepassxc|^less|^lib|^linux|locales|^login|^logsave|^lsof|^lvm|\
+^make|^manpages|^mariadb|^mate|^mc$|^mount|^mpv|^mythes|\
+^nano|^network|^notepad|^ocrmypdf|^openjdk|^openssh|^openssl|^orca|\
+^parted|^passwd|^pavucontrol|^perl|^php|^pidgin|^podman|^powermgmt|^pulseaudio|^python|^qpdf|^qt|\
+^rkhunter|^rsync|^ruby|^qemu|qjackctl|^rustup|^samba|^seahorse|^smb|^speech-dispatcher|^systemd|^sudo|^synaptic|^sysv|\
+^task|^tesseract|^thunar|^thunderbird|^tzdata|^uno|^unzip|^upower|^ure|^usb|^util|^uuid|\
+^vim|^vlc|^wine|^x11|^xarchiver|^xdg|^xfce4|^xorg|^xsane|^xserver|^xterm|^xz|^yt|^zenity|^zip"
+
+printf "\n%s\n%s\n\n" "Puedes ver la descripción de los paquetes que no se filtren. El $(tput bold)$(tput setaf 5)FILTRO preDefinido$(tput sgr0) es:" "$FILTRO"
+read -rp "¿Quieres ver detalle? ($(tput bold)$(tput setaf 6)T$(tput sgr0)odo/filtro $(tput bold)$(tput setaf 6)D$(tput sgr0)efinido/\
+otro $(tput bold)$(tput setaf 6)F$(tput sgr0)iltro/otra letra)" SEGUIR
+
+if [ "$SEGUIR" = t ] || [ "$SEGUIR" = T ]; then
+	FILTRO="$PRE_FILTRO"
+elif [ "$SEGUIR" = d ] || [ "$SEGUIR" = D ]; then
+    printf "%s\n\n" "Se va a usar el filtro predefinido"
+    FILTRO="$PRE_FILTRO|$FILTRO"
+elif [ "$SEGUIR" = f ] || [ "$SEGUIR" = F ]; then
+    #printf "%s\n" "Introduce tu filtro. Usa \\| en lugar de |"
+    read -rp "Introduce tu filtro. Usa \| en lugar de |"  FILTRO
+    printf "%s\n\n" "El Filtro definido es $FILTRO"
+    FILTRO="$PRE_FILTRO|$FILTRO"
+else
+    #printf "%s\n" "Recordar $(tput setaf 6)actualizaciones.sh$(tput sgr0)"
+    return 0
+fi
+
+
+# Quitar repetidos
+ACTUALIZACION=$(echo "$ACTUALIZACION" | cut -d/ -f1 - | sort -u)
+ACTU_NO_REPE=$(echo "$ACTUALIZACION" | cut -d- -f1 | sort -u)
+
+#printf "%s\n%s\n\n" "FILTRADOS" "$(echo "$ACTU_NO_REPE" | grep -v "$FILTRO")"
+for a in $(echo "$ACTU_NO_REPE" | grep -vE "$FILTRO")
+do
+	printf "%s\n" "Rescato: $a"
+	PAQUETE=$(echo "$ACTUALIZACION" | grep "^$a" | head -n1 |  cut -d/ -f1)
+	printf "%s\n" "Paquete: $PAQUETE"
+	apt show $PAQUETE | grep --color=auto -A 15 ^Description
+	printf "\n"
+done 2>/dev/null
+
+# actualizacion con autoremove:
+# sudo apt-get --autoremove upgrade
+#printf "%s\n" "Recordar $(tput setaf 6)actualizaciones.sh$(tput sgr0)"

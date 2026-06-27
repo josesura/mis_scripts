@@ -1,5 +1,5 @@
-#!/bin/dash 
-# conv_ffmpeg.sh convierte formato multimedia de archivos de un directorio a otro 
+#!/bin/dash
+# conv_ffmpeg.sh convierte formato multimedia de archivos de un directorio a otro
 # formato en nuevo directorio con el programa ffmpeg
 # BASE=$(basename $1)
 # EXT="${BASE##*.}"
@@ -22,6 +22,18 @@ elif [ $# -eq 2 ]; then
 	EXT1=$1
 	EXT2=$2
 	echo conv_ffmpeg.sh DIR1="$DIR1" '|' "DIR2=$DIR2" '|' EXT1="$EXT1" '|' EXT2="$EXT2"
+elif [ $# -eq 3 ]; then
+	DIR1=$1
+	DIR2=$1
+	EXT1=$2
+	EXT2=$3
+	echo conv_ffmpeg.sh DIR1="$DIR1" '|' "DIR2=$DIR2" '|' EXT1="$EXT1" '|' EXT2="$EXT2"
+elif [ $# -eq 4 ]; then
+	DIR1=$1
+	DIR2=$2
+	EXT1=$3
+	EXT2=$4
+	echo conv_ffmpeg.sh DIR1="$DIR1" '|' "DIR2=$DIR2" '|' EXT1="$EXT1" '|' EXT2="$EXT2"
 fi
 #exit
 
@@ -29,7 +41,7 @@ fi
 # test
 if ! true; then
 for a in "$DIR1"/*."$EXT1"
-do 
+do
 	[ -e "$a" ] || break  # handle the case of no files
 	b="$DIR2"/$(basename "$a")
 	c=${b%*.*}.$EXT2
@@ -39,12 +51,13 @@ fi
 
 if true ; then
 for a in "$DIR1"/*."$EXT1"
-do 
+do
 	[ -e "$a" ] || break  # handle the case of no files
 	b="$DIR2"/$(basename "$a")
 	c=${b%*.*}.$EXT2
 	printf "%s\n" "DE: $a --> $c"
 	ffmpeg -i "$a" "$c"
+  #rm "$a"
 done
 fi
 

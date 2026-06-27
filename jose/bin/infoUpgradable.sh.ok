@@ -1,0 +1,107 @@
+#!/bin/dash
+# Revisíon más informada los paquetes a actualizar
+# Lista el total de actualizaciones y permite filtrar aquellos de los que se quiere más info
+# De ellos muestra el Description
+# Por defecto filtra librerias, python, tomcat, bin, gtk
+#
+# Mirar esto: https://piproductora.com/enumere-las-actualizaciones-disponibles-pero-no-las-instale/
+# 
+printf "%s\n\n" "Recordar actualizaciones.sh que además refresca la cache"
+printf "%s\n" "Revisando actualizaciones disponibles"
+
+if ! true 
+then 
+	ACTUALIZA_BD=$(sudo apt update)
+	printf "%s\n" "$ACTUALIZA_BD"
+
+	NUM_ACTUALIZ=$(echo "$ACTUALIZA_BD" | grep "actualizar" | awk '{print $4}') 
+	printf "%s\n" "'NUM_ACTUALIZ:'$NUM_ACTUALIZ"
+	return
+fi
+	
+sudo apt-get update
+
+COMMAND_LINE=1
+# COMMAND_LINE
+if [ $COMMAND_LINE -eq 1 ] 
+then
+	COMANDO='apt list --upgradable'
+	PRE_FILTRO="Listando..."
+	NUM_ACTUALIZ=$(( $($COMANDO | wc -l) -1 ))
+else
+# Nuevo
+	COMANDO='apt-get --just-print upgrade'
+	NUM_ACTUALIZ=$($COMANDO | grep actualizados | awk '{print $1}')
+fi
+# control de salida correcta. Otra opcion es comprobar si esta en uso /var/lib/apt/lists/lock
+EXITO=$?
+if [ ! $EXITO -eq 0 ]; then 
+	printf "%s\n" "Comando: $COMANDO. Salida: $EXITO"
+	printf "%s\n" "No es posible refrescar las actualizaciones. Esperar unos momentos"
+	return
+fi
+
+if [ "$NUM_ACTUALIZ" -eq "0" ]; then 
+    printf "%s\n" "No hay actualizaciones disponibles"
+    return
+fi
+#printf "%s\n" "Hay $NUM_ACTUALIZ actualizaciones disponibles. ¿Quieres verlas? (No/Otra)"
+read -rp "Hay $NUM_ACTUALIZ actualizaciones disponibles. ¿Quieres verlas? (No/Otra)" SEGUIR
+
+if [ "$SEGUIR" = n ] || [ "$SEGUIR" = N ]; then 
+    return
+fi
+
+printf "%s\n" "Lista de actualizaciones:"
+PRE_FILTRO="Listando"
+ACTUALIZACION=$($COMANDO | grep -v $PRE_FILTRO 2>/dev/null)
+printf "%s\n%s\n" "ACTUALIZACION" "$ACTUALIZACION"
+
+FILTRO="^7zip|^anacron|^apache|^apt|^atril|^audacity|\
+^bash|^bcompare|bin$|^binutils|^bluefish|bluetooth|bluez|^bootlogd|^bsd|\
+^caja|^calibre|^chkrootkit|^clamav|^cpp|^chromium|^cups|\
+^dash|^dbus|^debconf|^debian|^dia|^dictionaries| diffutils|^dirmngr|^dpkg|e2fsprogs|^eject|^exim|\
+^fdisk|^ffmpeg|^firefox|^firmware|^flatpak|^fonts|^fsarchiver|^fwupd|\
+^g++|^gcc|^geany|^ghostscript|^gimp|^gir1|^git|^gnome|^gnupg|^gpg|^gstreamer|^gtk|^gzip|\
+^imagemagick|^initscripts|^intel|^kbd|^lib|^linux|locales|^login|^logsave|\
+^make|^manpages|^mariadb|^mate|^mc$|^mount|^mpv|\
+^nano|^network|^notepad|^ocrmypdf|^openjdk|^openssh|^openssl|^orca|\
+^passwd|^pavucontrol|^perl|^php|^pidgin|^podman|^powermgmt|^pulseaudio|^python|\
+^rsync|^ruby|^qemu|qjackctl|^rustup|^samba|^seahorse|^smb|^systemd|^sudo|^synaptic|^sysv|\
+^task|^tesseract|^thunar|^thunderbird|^uno|^upower|^ure|^usb|^util|^uuid|\
+^vim|^vlc|^wine|^x11|^xdg|^xfce4|^xorg|^xsane|^xserver|^xterm|^yt"
+
+printf "\n%s\n%s\n" "Puedes ver la descripción de los paquetes que no se filtren" "El Filtro predefinido es $FILTRO"
+read -rp "¿Quieres ver detalle (Todo|filtro Definido|otro Filtro|otra letra)?" SEGUIR
+
+if [ "$SEGUIR" = t ] || [ "$SEGUIR" = T ]; then 
+	FILTRO="$PRE_FILTRO"
+elif [ "$SEGUIR" = d ] || [ "$SEGUIR" = D ]; then 
+    printf "%s\n" "Se va a filtrar: $FILTRO" 
+    FILTRO="$PRE_FILTRO|$FILTRO"
+elif [ "$SEGUIR" = f ] || [ "$SEGUIR" = F ]; then 
+    #printf "%s\n" "Introduce tu filtro. Usa \\| en lugar de |" 
+    read -rp "Introduce tu filtro. Usa \| en lugar de |"  FILTRO
+    printf "%s\n" "El Filtro definido es $FILTRO"
+    FILTRO="$PRE_FILTRO|$FILTRO"
+else
+    return 0
+fi
+
+
+# Quitar repetidos
+ACTUALIZACION=$(echo "$ACTUALIZACION" | cut -d/ -f1 - | sort -u)
+ACTU_NO_REPE=$(echo "$ACTUALIZACION" | cut -d- -f1 | sort -u)
+
+#printf "%s\n%s\n\n" "FILTRADOS" "$(echo "$ACTU_NO_REPE" | grep -v "$FILTRO")"
+for a in $(echo "$ACTU_NO_REPE" | grep -vE "$FILTRO")
+do 
+	printf "%s\n" "Rescato: $a"
+	PAQUETE=$(echo "$ACTUALIZACION" | grep "^$a" | head -n1 |  cut -d/ -f1)
+	printf "%s\n" "Paquete: $PAQUETE"
+	apt show $PAQUETE | grep --color=auto -A 15 ^Description
+	printf "\n"
+done 2>/dev/null
+
+# actualizacion con autoremove: 
+# sudo apt-get --autoremove upgrade

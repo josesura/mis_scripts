@@ -6,19 +6,35 @@
 # $ grep ', IES' Resolucion_necesidades-0304-PS.csv
 # ...
 # grep: Resolucion_necesidades-0304-PS.csv: coincidencia en fichero binario
-# $ file file Resolucion_necesidades-0304-PS.csv 
+# $ file file Resolucion_necesidades-0304-PS.csv
 # Resolucion_necesidades-0304-PS.csv: ISO-8859 text, with CRLF, LF line terminators
 # $ $ sed -e 's/, IES/", "IES/' Resolucion_necesidades-0304-PS.csv
 # iconv -o Resolucion_necesidades-0304-PS-conv.csv -f ISO-8859-1 -t UTF8 Resolucion_necesidades-0304-PS.csv
+if [ $# -eq 0 ]
+then
+  echo "$(basename $0): convertir ficheros ISO-8859-1 del PADI a UTF8 importable en libreoffice"
+  echo
+  echo "Uso:"
+  echo "==="
+  echo "$0 ficheros a convertir"
+  echo
+  echo "como se indicaría en el shell. Sin separar, admite comodines (glob)"
+  echo
+fi
 
-# Nombre del fichero sin PATH
-BASE=$(basename $1)
-NOMBRE="${BASE%*.*}"
-EXT="${BASE##*.}"
+for FICHERO in "$@"
+do
+    echo $FICHERO
+    # Nombre del fichero sin PATH
+    BASE=$(basename "$FICHERO")
+    NOMBRE="${BASE%*.*}"
+    EXT="${BASE##*.}"
 
-TEMP_FIC=$NOMBRE.conv
-iconv -o $TEMP_FIC -f ISO-8859-1 -t UTF8 $1
-sed -i -e 's/, IES/", "IES/' $TEMP_FIC
-tail -n+5 $TEMP_FIC > $NOMBRE-conv.$EXT
-rm $TEMP_FIC
+    TEMP_FIC=$NOMBRE.conv
+    iconv -o "$TEMP_FIC" -f ISO-8859-1 -t UTF8 "$FICHERO"
+    sed -i -e 's/, IES/", "IES/' "$TEMP_FIC"
+    sed -i -e 's/, CP IFP/", "CP IFP/' "$TEMP_FIC"
+    tail -n+5 "$TEMP_FIC" | sort > "$NOMBRE"-conv."$EXT"
+    rm "$TEMP_FIC"
 
+done

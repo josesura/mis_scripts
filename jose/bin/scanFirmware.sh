@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 dir="$(find /lib/modules/ -mindepth 1 -maxdepth 1 -print0 | sort -zr | head -zn1)"
 find "$dir" -type f -name '*.ko' |
 while read -r m ; do

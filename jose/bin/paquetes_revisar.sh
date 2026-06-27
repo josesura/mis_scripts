@@ -63,7 +63,7 @@ msgSal "" $FIC
 FIC=pkt-3eliminados-aptitude
 [ ! -e $FIC ] || mv $FIC $DIR_OLD
 msgSal "Buscando paquetes eliminados con aptitude" $FIC
-msgSal "aptitude search '~c'" $FIC
+msgSal "$ aptitude search '~c'" $FIC
 aptitude search '~c' | tee -a $FIC
 msgSal "" $FIC
 msgSal "Se pueden purgar con: " $FIC

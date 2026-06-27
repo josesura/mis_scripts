@@ -6,9 +6,11 @@
 #
 # Mirar esto: https://piproductora.com/enumere-las-actualizaciones-disponibles-pero-no-las-instale/
 # 
+printf "%s\n\n" "Recordar actualizaciones.sh que además refresca la cache"
 printf "%s\n" "Revisando actualizaciones disponibles"
 
-if ! true; then 
+if ! true 
+then 
 	ACTUALIZA_BD=$(sudo apt update)
 	printf "%s\n" "$ACTUALIZA_BD"
 
@@ -19,12 +21,13 @@ fi
 	
 sudo apt-get update
 
-OLD=0
-# OLD
-if [ $OLD -eq 1 ]; then
+COMMAND_LINE=1
+# COMMAND_LINE
+if [ $COMMAND_LINE -eq 1 ] 
+then
 	COMANDO='apt list --upgradable'
 	PRE_FILTRO="Listando..."
-	NUM_ACTUALIZ=$($COMANDO | wc -l) 
+	NUM_ACTUALIZ=$(( $($COMANDO | wc -l) -1 ))
 else
 # Nuevo
 	COMANDO='apt-get --just-print upgrade'
@@ -49,35 +52,27 @@ if [ "$SEGUIR" = n ] || [ "$SEGUIR" = N ]; then
     return
 fi
 
-# actualizo cache de apt-file
-sudo apt-file update
-
 printf "%s\n" "Lista de actualizaciones:"
-#if [ "$OLD" -eq "1" ]; then
-if true ; then
-	# OLD
-	COMANDO='apt list --upgradable'
-	PRE_FILTRO="Listando..."
-	ACTUALIZACION=$($COMANDO | grep -v "$PRE_FILTRO" 2>/dev/null) #| tr -s '\n' ' ' 2>/dev/null
-else
-	# Nuevo
-	ACTUALIZACION=$($COMANDO | grep -A1 actualizarán 2>/dev/null) #| tr -s '\n' ' ' 2>/dev/null
-	ACTUALIZACION=$(echo "$ACTUALIZACION" | grep -v actualizarán)
-fi
-printf "%s\n" "$ACTUALIZACION"
+PRE_FILTRO="Listando"
+ACTUALIZACION=$($COMANDO | grep -v $PRE_FILTRO 2>/dev/null)
+printf "%s\n%s\n" "ACTUALIZACION" "$ACTUALIZACION"
 
-#salir
-#if [ "$OLD" -eq "0" ]; then
-if ! true ; then
- return
-fi
+FILTRO="^7zip\|^anacron\|^apache\|^apt\|^atril\|^audacity\|\
+^bash\|^bcompare\|bin$\|^binutils\|^bluefish\|bluetooth\|bluez\|^bootlogd\|^bsd\|\
+^caja\|^calibre\|^chkrootkit\|^clamav\|^cpp\|^chromium\|^cups\|\
+^dash\|^dbus\|^debconf\|^debian\|^dia\|^dictionaries\| diffutils\|^dirmngr\|^dpkg\|e2fsprogs\|^eject\|^exim\|\
+^fdisk\|^ffmpeg\|^firefox\|^firmware\|^flatpak\|^fonts\|^fsarchiver\|^fwupd\|\
+^g++\|^gcc\|^geany\|^ghostscript\|^gimp\|^gir1\|^git\|^gnome\|^gnupg\|^gpg\|^gstreamer\|^gtk\|^gzip\|\
+^imagemagick\|^initscripts\|^intel\|^kbd\|^lib\|^linux\|locales\|^login\|^logsave\|\
+^make\|^manpages\|^mariadb\|^mate\|^mc$\|^mount\|^mpv\|\
+^nano\|^network\|^notepad\|^ocrmypdf\|^openjdk\|^openssh\|^openssl\|^orca\|\
+^passwd\|^pavucontrol\|^perl\|^php\|^pidgin\|^podman\|^powermgmt\|^pulseaudio\|^python\|\
+^rsync\|^ruby\|^qemu\|qjackctl\|^rustup\|^samba\|^seahorse\|^smb\|^systemd\|^sudo\|^synaptic\|^sysv\|\
+^task\|^tesseract\|^thunar\|^thunderbird\|^uno\|^upower\|^ure\|^usb\|^util\|^uuid\|\
+^vim\|^vlc\|^wine\|^x11\|^xdg\|^xfce4\|^xorg\|^xsane\|^xserver\|^xterm\|^yt"
 
-
-FILTRO="bin$\|^cpp\|^dbus-\|^evolution\|^firefox\|g++\|gcc\|^gir1.2-\|^gnome\|gtk$\|^lib\|^nautilus\|^perl\|^php\|^python\|^systemd\|^vim\|^vlc"
-printf "%s\n" "El Filtro definido es $FILTRO"
-#printf "%s" "¿Quieres ver detalle (Todo|filtro Definido|otro Filtro|otra letra)?"
+printf "\n%s\n%s\n" "Puedes ver la descripción de los paquetes que no se filtren" "El Filtro predefinido es $FILTRO"
 read -rp "¿Quieres ver detalle (Todo|filtro Definido|otro Filtro|otra letra)?" SEGUIR
-
 
 if [ "$SEGUIR" = t ] || [ "$SEGUIR" = T ]; then 
 	FILTRO="$PRE_FILTRO"
@@ -92,9 +87,21 @@ elif [ "$SEGUIR" = f ] || [ "$SEGUIR" = F ]; then
 else
     return 0
 fi
-# No funciona porque $ACTUALIZACION no tiene saltos de linea. Pero con "" sí debería tenerlos
-for a in $(echo "$ACTUALIZACION" | cut -d/ -f1 | grep -v $FILTRO); do apt show $a | grep --color=auto ^Package; apt show $a | grep --color=auto -A 10 ^Description; printf "\n" ;done 2>/dev/null
-#for a in $(apt list --upgradable | cut -d/ -f1 | grep -v "$FILTRO"); do apt show "$a" | grep --color=auto ^Package; apt show "$a" | grep --color=auto -A 10 ^Description; printf "\n" ;done 2>/dev/null
+
+
+# Quitar repetidos
+ACTUALIZACION=$(echo "$ACTUALIZACION" | cut -d/ -f1 - | sort -u)
+ACTU_NO_REPE=$(echo "$ACTUALIZACION" | cut -d- -f1 | sort -u)
+
+#printf "%s\n%s\n\n" "FILTRADOS" "$(echo "$ACTU_NO_REPE" | grep -v "$FILTRO")"
+for a in $(echo "$ACTU_NO_REPE" | grep -v "$FILTRO")
+do 
+	printf "%s\n" "Rescato: $a"
+	PAQUETE=$(echo "$ACTUALIZACION" | grep "^$a" | head -n1 |  cut -d/ -f1)
+	printf "%s\n" "Paquete: $PAQUETE"
+	apt show $PAQUETE | grep --color=auto -A 15 ^Description
+	printf "\n"
+done 2>/dev/null
 
 # actualizacion con autoremove: 
 # sudo apt-get --autoremove upgrade
